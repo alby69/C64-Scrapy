@@ -70,7 +70,9 @@ def build_pdf(docs_dir: pathlib.Path, out_pdf: pathlib.Path, title: str, author:
         "-V", "geometry:margin=2.5cm",
         "-V", "mainfont=DejaVu Serif",
         "-V", "monofont=DejaVu Sans Mono",
+        "-V", "CJKmainfont=DejaVu Sans", # Supporto per caratteri estesi
         "--highlight-style=tango",
+        "--listings", # Usa il pacchetto listings per il codice
     ]
 
     pypandoc.convert_file(
@@ -84,8 +86,8 @@ def build_pdf(docs_dir: pathlib.Path, out_pdf: pathlib.Path, title: str, author:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--docs", default="docs_bbcelite")
-    parser.add_argument("--out", default="manuale_c64_elite.pdf")
+    parser.add_argument("--docs", default="docs_c64")
+    parser.add_argument("--out", default="manuale_c64.pdf")
     parser.add_argument("--title", default="Elite 6502: Manuale di programmazione Assembly per Commodore 64")
     parser.add_argument("--author", default="Raccolta da elite.bbcelite.com (Mark Moxon)")
     args = parser.parse_args()

@@ -1,7 +1,7 @@
-BOT_NAME = "bbcelite_scraper"
+BOT_NAME = "c64_docs_scraper"
 
-SPIDER_MODULES = ["bbcelite_scraper.spiders"]
-NEWSPIDER_MODULE = "bbcelite_scraper.spiders"
+SPIDER_MODULES = ["c64_metadata.spiders"]
+NEWSPIDER_MODULE = "c64_metadata.spiders"
 
 # --- Buon comportamento verso il sito (vedi robots.txt di elite.bbcelite.com) ---
 ROBOTSTXT_OBEY = True
@@ -34,10 +34,10 @@ RETRY_ENABLED = True
 RETRY_TIMES = 3
 
 ITEM_PIPELINES = {
-    "bbcelite_scraper.pipelines.MarkdownWriterPipeline": 300,
+    "c64_metadata.pipelines.MarkdownWriterPipeline": 300,
 }
 
 # Cartella di output dei file Markdown (sovrascrivibile da riga di comando con -s DOCS_OUTPUT_DIR=...)
-DOCS_OUTPUT_DIR = "docs_bbcelite"
+DOCS_OUTPUT_DIR = "docs_c64"
 
 LOG_LEVEL = "INFO"

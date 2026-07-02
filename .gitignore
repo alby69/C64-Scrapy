@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+docs_c64/
+docs_bbcelite/
+httpcache/
+*.pdf
+_combined.md

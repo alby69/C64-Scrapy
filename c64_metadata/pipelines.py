@@ -12,14 +12,15 @@ class MarkdownWriterPipeline:
     deep_dives/maths/foo.md)."""
 
     def open_spider(self, spider):
-        self.out_dir = pathlib.Path(spider.settings.get("DOCS_OUTPUT_DIR", "docs_bbcelite"))
+        self.out_dir = pathlib.Path(spider.settings.get("DOCS_OUTPUT_DIR", "docs_c64"))
         self.out_dir.mkdir(parents=True, exist_ok=True)
 
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
         url = adapter["url"]
 
-        file_path = self.out_dir / self._slugify_path(url)
+        domain = urlparse(url).netloc.replace(".", "_")
+        file_path = self.out_dir / domain / self._slugify_path(url)
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
         frontmatter = {
@@ -32,7 +33,15 @@ class MarkdownWriterPipeline:
         content = "---\n" + yaml.safe_dump(frontmatter, allow_unicode=True, sort_keys=False) + "---\n\n"
         content += f"# {adapter['title']}\n\n"
         content += adapter["body_md"] or "*(contenuto non estratto automaticamente — controllare l'URL sorgente)*\n"
-        content += f"\n\n---\n*Fonte originale: [{url}]({url}) — © Mark Moxon / I. Bell / D. Braben.*\n"
+
+        if adapter.get("code_blocks"):
+            content += "\n\n## Codice Estratto\n\n"
+            for block in adapter["code_blocks"]:
+                lang = block.get("lang", "")
+                code = block.get("code", "")
+                content += f"```{lang}\n{code}\n```\n\n"
+
+        content += f"\n\n---\n*Fonte originale: [{url}]({url})*\n"
 
         file_path.write_text(content, encoding="utf-8")
         spider.logger.info("Salvato: %s", file_path)

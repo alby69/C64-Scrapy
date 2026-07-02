@@ -62,7 +62,7 @@ def build_index(docs_dir: pathlib.Path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--docs", default="docs_bbcelite", help="Cartella con i file Markdown")
+    parser.add_argument("--docs", default="docs_c64", help="Cartella con i file Markdown")
     args = parser.parse_args()
     build_index(pathlib.Path(args.docs))
 

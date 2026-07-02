@@ -1,0 +1,4 @@
+scrapy>=2.11
+trafilatura>=1.8
+pyyaml>=6.0
+pypandoc>=1.13

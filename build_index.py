@@ -15,18 +15,22 @@ import yaml
 
 
 def read_frontmatter(md_path: pathlib.Path) -> dict:
-    text = md_path.read_text(encoding="utf-8")
-    if not text.startswith("---"):
-        return {}
     try:
+        text = md_path.read_text(encoding="utf-8")
+        if not text.startswith("---"):
+            return {}
         _, fm, _ = text.split("---", 2)
         return yaml.safe_load(fm) or {}
-    except ValueError:
+    except (ValueError, OSError, yaml.YAMLError):
         return {}
 
 
-def build_index(docs_dir: pathlib.Path):
+def build_index(docs_dir: pathlib.Path, title_prefix: str = "Indice"):
     by_category = collections.defaultdict(list)
+
+    if not docs_dir.exists():
+        print(f"[avviso] la cartella {docs_dir} non esiste. Creazione in corso...")
+        docs_dir.mkdir(parents=True, exist_ok=True)
 
     for md_path in sorted(docs_dir.rglob("*.md")):
         if md_path.name == "index.md":
@@ -39,10 +43,9 @@ def build_index(docs_dir: pathlib.Path):
         by_category[category].append((fm.get("title", md_path.stem), rel_link))
 
     lines = [
-        "# Indice — Manuale di programmazione Assembly 6502 per Commodore 64",
+        f"# {title_prefix} — Manuale di programmazione per Commodore 64",
         "",
-        "> Documentazione estratta da [elite.bbcelite.com](https://elite.bbcelite.com/), "
-        "a cura di Mark Moxon. Uso educativo personale.",
+        f"> Documentazione aggiornata il {pathlib.Path().stat().st_mtime}",
         "",
     ]
 

@@ -52,10 +52,16 @@ def concat_markdown(docs_dir: pathlib.Path, ordered_links: list) -> str:
 
 def build_pdf(docs_dir: pathlib.Path, out_pdf: pathlib.Path, title: str, author: str):
     index_md = docs_dir / "index.md"
-    if not index_md.exists():
-        raise SystemExit("index.md non trovato: esegui prima build_index.py")
 
-    ordered_links = extract_links_in_order(index_md)
+    if index_md.exists():
+        ordered_links = extract_links_in_order(index_md)
+    else:
+        print("[info] index.md non trovato, uso l'ordine alfabetico dei file .md")
+        ordered_links = [p.relative_to(docs_dir).as_posix() for p in sorted(docs_dir.rglob("*.md")) if p.name != "index.md"]
+
+    if not ordered_links:
+        print("[errore] nessun file markdown trovato.")
+        return
     full_md = concat_markdown(docs_dir, ordered_links)
 
     combined_path = docs_dir / "_combined.md"

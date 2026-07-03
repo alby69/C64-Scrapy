@@ -1,46 +1,57 @@
-# C64 Documentation Scraper & Manual Generator
+# C64 Scraper Module
 
-## 1. Obiettivo
+Componente dell'ecosistema **[C64-Intelligence-SDK](https://github.com/alby69/C64-Intelligence-SDK)** dedicato all'acquisizione di dati tecnici.
 
-Questo progetto è un framework basato su **Scrapy** per l'estrazione automatica di documentazione tecnica riguardante il Commodore 64 da vari siti web (es. elite.bbcelite.com, codebase64.org, ecc.).
-L'obiettivo è generare:
-- Una Knowledge Base in formato Markdown organizzata per cartelle, pronta per essere indicizzata in sistemi RAG (come [alby69/C64-LLM](https://github.com/alby69/C64-LLM)).
-- Un manuale PDF unico, completo di codice Assembly e BASIC, generato tramite Pandoc.
+## Obiettivo
 
-## 2. Architettura
+Questo modulo è un framework basato su **Scrapy** per l'estrazione automatica di documentazione tecnica, manuali e sorgenti riguardanti il Commodore 64. I dati estratti vengono convertiti in Markdown strutturato con metadati YAML, ottimizzati per:
+1. **RAG (Retrieval-Augmented Generation)**: Alimentare la Knowledge Base di agenti AI (come `C64-LLM`).
+2. **Documentazione Offline**: Generare manuali PDF unificati tramite Pandoc.
+3. **Analisi del Codice**: Estrarre snippet Assembly 6502 e BASIC per validazione e training.
 
-Il progetto è strutturato come un plugin per sistemi di Knowledge Management:
-- **Spiders**: Ogni sito ha il suo spider dedicato in `c64_metadata/spiders/`.
-- **Pipelines**: Gestiscono la pulizia dei dati e la scrittura dei file Markdown con frontmatter YAML.
-- **Post-processing**: Script per la creazione di indici e la generazione di PDF.
+## Architettura Decoupled
 
-## 3. Installazione
+Il modulo è progettato per essere totalmente indipendente:
+- **Spiders**: Logica di navigazione specifica per sito (`c64_scraper/spiders/`).
+- **Content Processor**: Logica di pulizia e conversione centralizzata (`c64_scraper/utils/processor.py`).
+- **Data Contract**: Ogni documento segue uno schema Markdown + YAML standard.
+
+## Installazione
 
 ```bash
-python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 # Richiede pandoc per la generazione PDF
 ```
 
-## 4. Utilizzo
+## Utilizzo
 
-### Scraping
-Per avviare lo scraping di una fonte specifica:
+### Tramite Entry Point (Consigliato)
 ```bash
-scrapy crawl bbcelite -s DOCS_OUTPUT_DIR=docs_c64
+# Esegue uno spider e genera l'indice
+python main.py bbcelite --index
+
+# Esegue tutti gli spider, genera indice e PDF
+python main.py --all --pdf
 ```
 
-### Generazione Indice
+### Comandi Scrapy Standalone
 ```bash
-python build_index.py --docs docs_c64
+scrapy crawl codebase64 -s DOCS_OUTPUT_DIR=docs_c64
 ```
 
-### Generazione PDF
-```bash
-python build_pdf.py --docs docs_c64 --out manuale_c64.pdf
+## Schema dei Dati (Frontmatter)
+
+I file generati includono metadati utili per l'indicizzazione:
+```yaml
+---
+title: "Nome Pagina"
+source_url: "https://..."
+category: "sottocartella/argomento"
+tags: [c64, assembly, graphics]
+scraped_at: "YYYY-MM-DD"
+---
 ```
 
-## 5. Integrazione con C64-LLM
+## Integrazione SDK
 
-Questo repo può essere integrato come modulo in `C64-LLM`. I file Markdown prodotti sono compatibili con il sistema RAG di `C64-LLM`.
-Consultare `INTEGRATION.md` per i dettagli tecnici sull'integrazione.
+All'interno dell'SDK, questo modulo viene montato come volume Docker e i suoi output (`docs_c64/`) sono condivisi con il modulo `core` per l'aggiornamento dinamico della Knowledge Base.

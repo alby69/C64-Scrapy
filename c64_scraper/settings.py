@@ -1,7 +1,7 @@
-BOT_NAME = "c64_docs_scraper"
+BOT_NAME = "c64_scraper"
 
-SPIDER_MODULES = ["c64_metadata.spiders"]
-NEWSPIDER_MODULE = "c64_metadata.spiders"
+SPIDER_MODULES = ["c64_scraper.spiders"]
+NEWSPIDER_MODULE = "c64_scraper.spiders"
 
 # --- Buon comportamento verso il sito (vedi robots.txt di elite.bbcelite.com) ---
 ROBOTSTXT_OBEY = True
@@ -34,7 +34,7 @@ RETRY_ENABLED = True
 RETRY_TIMES = 3
 
 ITEM_PIPELINES = {
-    "c64_metadata.pipelines.MarkdownWriterPipeline": 300,
+    "c64_scraper.pipelines.MarkdownWriterPipeline": 300,
 }
 
 # Cartella di output dei file Markdown (sovrascrivibile da riga di comando con -s DOCS_OUTPUT_DIR=...)

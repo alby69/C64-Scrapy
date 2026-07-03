@@ -17,11 +17,11 @@ import re
 import time
 from urllib.parse import urlparse
 
-import trafilatura
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
-from ..items import DocItem
+from c64_scraper.items import DocItem
+from c64_scraper.utils.processor import ContentProcessor
 
 DEFAULT_SECTIONS = "about_site,deep_dives,c64/indexes,hacks"
 
@@ -58,19 +58,10 @@ class BBCEliteSpider(CrawlSpider):
             return
 
         html = response.text
-        raw_title = response.css("title::text").get() or response.url
-        title = raw_title.split(" - Elite")[0].strip()
+        title = ContentProcessor.clean_title(response.css("title::text").get() or response.url, " - Elite")
 
-        # Estrazione base con trafilatura
-        body_md = trafilatura.extract(
-            html,
-            url=response.url,
-            output_format="markdown",
-            include_links=True,
-            include_images=True,
-            include_tables=True,
-            favor_recall=True,
-        )
+        # Estrazione base con trafilatura via ContentProcessor
+        body_md = ContentProcessor.extract_markdown(html, response.url)
 
         # Post-processing per migliorare l'estrazione del codice
         if body_md:
@@ -103,10 +94,7 @@ class BBCEliteSpider(CrawlSpider):
             if not code_text:
                 continue
 
-            lang = "asm" # Default per questo sito
-            if any(k in code_text.lower() for k in ["print", "goto", "if", "then", "poke", "peek"]):
-                lang = "basic"
-
+            lang = ContentProcessor.detect_language(code_text) or "asm"
             blocks.append({"lang": lang, "code": code_text})
         return blocks
 

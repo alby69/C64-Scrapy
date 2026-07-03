@@ -1,9 +1,9 @@
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
-import trafilatura
 import time
-from ..items import DocItem
+from c64_scraper.items import DocItem
+from c64_scraper.utils.processor import ContentProcessor
 
 class Codebase64Spider(CrawlSpider):
     name = "codebase64"
@@ -16,16 +16,9 @@ class Codebase64Spider(CrawlSpider):
 
     def parse_item(self, response):
         html = response.text
-        title = response.css("h1::text").get() or response.url
+        title = (response.css("h1::text").get() or response.url).strip()
 
-        body_md = trafilatura.extract(
-            html,
-            url=response.url,
-            output_format="markdown",
-            include_links=True,
-            include_images=True,
-            include_tables=True,
-        )
+        body_md = ContentProcessor.extract_markdown(html, response.url)
 
         item = DocItem()
         item["url"] = response.url

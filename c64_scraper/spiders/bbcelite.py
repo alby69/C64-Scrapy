@@ -67,6 +67,10 @@ class BBCEliteSpider(CrawlSpider):
         if body_md:
             body_md = self._improve_code_blocks(body_md, response)
 
+        # Get last modified header if present
+        last_mod_header = response.headers.get("Last-Modified")
+        last_modified = last_mod_header.decode("utf-8", errors="ignore") if last_mod_header else None
+
         item = DocItem()
         item["url"] = response.url
         item["title"] = title
@@ -75,6 +79,8 @@ class BBCEliteSpider(CrawlSpider):
         item["body_md"] = body_md
         item["code_blocks"] = self._extract_explicit_code(response)
         item["scraped_at"] = time.strftime("%Y-%m-%d")
+        if last_modified:
+            item["last_modified"] = last_modified
         yield item
 
     @staticmethod

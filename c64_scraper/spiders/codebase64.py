@@ -20,6 +20,10 @@ class Codebase64Spider(CrawlSpider):
 
         body_md = ContentProcessor.extract_markdown(html, response.url)
 
+        # Get last modified header if present
+        last_mod_header = response.headers.get("Last-Modified")
+        last_modified = last_mod_header.decode("utf-8", errors="ignore") if last_mod_header else None
+
         item = DocItem()
         item["url"] = response.url
         item["title"] = title.strip()
@@ -28,4 +32,6 @@ class Codebase64Spider(CrawlSpider):
         item["body_md"] = body_md
         item["code_blocks"] = [] # Da implementare specificamente per DokuWiki
         item["scraped_at"] = time.strftime("%Y-%m-%d")
+        if last_modified:
+            item["last_modified"] = last_modified
         yield item

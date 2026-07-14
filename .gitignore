@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 docs_c64/
 docs_bbcelite/
+dataset_c64/
 httpcache/
 *.pdf
 _combined.md

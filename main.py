@@ -15,7 +15,7 @@ def run_scrapy(spider, output_dir, extra_args=None):
 
 def main():
     parser = argparse.ArgumentParser(description="C64 Scraper CLI")
-    parser.add_argument("spider", nargs="?", help="Nome dello spider da eseguire (es. bbcelite, codebase64)")
+    parser.add_argument("spider", nargs="?", help="Nome dello spider da eseguire (es. bbcelite, codebase64, c64wiki, archiveorg, github)")
     parser.add_argument("--output", default="docs_c64", help="Cartella di output")
     parser.add_argument("--index", action="store_true", help="Genera l'indice dopo lo scraping")
     parser.add_argument("--pdf", action="store_true", help="Genera il PDF dopo lo scraping")
@@ -25,7 +25,7 @@ def main():
 
     spiders = [args.spider] if args.spider else []
     if args.all:
-        spiders = ["bbcelite", "codebase64"]
+        spiders = ["bbcelite", "codebase64", "c64wiki", "archiveorg", "github"]
 
     if not spiders and not (args.index or args.pdf):
         parser.print_help()

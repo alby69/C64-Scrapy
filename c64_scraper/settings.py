@@ -35,9 +35,13 @@ RETRY_TIMES = 3
 
 ITEM_PIPELINES = {
     "c64_scraper.pipelines.MarkdownWriterPipeline": 300,
+    "c64_scraper.pipelines.JsonDatasetPipeline": 400,
 }
 
 # Cartella di output dei file Markdown (sovrascrivibile da riga di comando con -s DOCS_OUTPUT_DIR=...)
 DOCS_OUTPUT_DIR = "docs_c64"
+
+# Cartella di output dei file JSONL (sovrascrivibile da riga di comando con -s DATASET_OUTPUT_DIR=...)
+DATASET_OUTPUT_DIR = "dataset_c64"
 
 LOG_LEVEL = "INFO"

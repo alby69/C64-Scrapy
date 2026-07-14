@@ -11,3 +11,4 @@ class DocItem(scrapy.Item):
     body_md = scrapy.Field()
     code_blocks = scrapy.Field()  # Lista di dict: {'lang': 'asm', 'code': '...'}
     scraped_at = scrapy.Field()
+    last_modified = scrapy.Field()

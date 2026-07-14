@@ -1,0 +1,13 @@
+.git/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+docs_c64/
+dataset_c64/
+httpcache/
+*.pdf
+_combined.md
+Dockerfile
+docker-compose.yml
+.dockerignore

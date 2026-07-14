@@ -81,9 +81,22 @@ class MarkdownWriterPipeline:
 
     @staticmethod
     def _slugify_path(url: str) -> pathlib.Path:
-        path = urlparse(url).path.strip("/")
+        parsed = urlparse(url)
+        path = parsed.path.strip("/")
+
         if not path or path == "index.html" or path == "cbmdocs.html":
             return pathlib.Path("index.md")
+
+        script_ext = re.compile(r"\.(php|cgi|asp|aspx|jsp)$", re.IGNORECASE)
+        if script_ext.search(path):
+            from urllib.parse import parse_qs
+            qs = parse_qs(parsed.query)
+            page_id = qs.get("id", [None])[0]
+            if page_id:
+                path = re.sub(r"[^a-zA-Z0-9/_-]", "_", page_id.replace(":", "/"))
+            else:
+                path = script_ext.sub("", path)
+
         path = re.sub(r"\.html?$", "", path)
         return pathlib.Path(path + ".md")
 

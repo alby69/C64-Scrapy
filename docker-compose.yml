@@ -1,0 +1,36 @@
+services:
+  scraper:
+    build: .
+    volumes:
+      - .:/app
+      - ./docs_c64:/app/docs_c64
+      - ./dataset_c64:/app/dataset_c64
+      - ./httpcache:/app/httpcache
+
+  spider:
+    build: .
+    volumes:
+      - ./docs_c64:/app/docs_c64
+      - ./dataset_c64:/app/dataset_c64
+      - ./httpcache:/app/httpcache
+    entrypoint: ["python", "main.py"]
+    command: ["--help"]
+    profiles: ["tools"]
+
+  index:
+    build: .
+    volumes:
+      - ./docs_c64:/app/docs_c64
+      - ./dataset_c64:/app/dataset_c64
+    entrypoint: ["python", "main.py"]
+    command: ["--index"]
+    profiles: ["tools"]
+
+  pdf:
+    build: .
+    volumes:
+      - ./docs_c64:/app/docs_c64
+      - ./:/app/output
+    entrypoint: ["python", "main.py"]
+    command: ["--pdf"]
+    profiles: ["tools"]

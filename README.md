@@ -50,6 +50,21 @@ Il modulo è strutturato come segue:
 
 ## Installazione
 
+### Tramite Docker (Consigliato)
+
+```bash
+# Build dell'immagine
+docker compose build
+
+# Esecuzione di uno spider con generazione indice
+docker compose run scraper codebase64 --index
+
+# Esecuzione di tutti gli spider con indice e PDF
+docker compose run scraper --all --pdf
+```
+
+### Installazione Locale
+
 ```bash
 pip install -r requirements.txt
 # Richiede pandoc per la generazione PDF opzionale
@@ -57,7 +72,23 @@ pip install -r requirements.txt
 
 ## Utilizzo
 
-### Tramite Entry Point (Consigliato)
+### Tramite Docker (Consigliato)
+
+```bash
+# Esegue uno spider e genera l'indice
+docker compose run scraper codebase64 --index
+
+# Esegue tutti gli spider, genera indice e PDF
+docker compose run scraper --all --pdf
+
+# Solo generazione indice (dopo aver eseguito gli spider)
+docker compose run index
+
+# Solo generazione PDF (dopo aver generato l'indice)
+docker compose run pdf
+```
+
+### Tramite Entry Point (Installazione Locale)
 ```bash
 # Esegue uno spider e genera l'indice
 python main.py codebase64 --index

@@ -21,6 +21,11 @@ Tutti i compiti di **strutturazione avanzata, memorizzazione vettoriale, chunkin
     - [x] `codebase64`: Corretto dominio e start url su `https://codebase.c64.org/`.
     - [x] `archiveorg`: Estrazione di metadati e testi da Archive.org.
     - [x] `github`: Ricerca automatica di repository con assembly C64.
+- [x] **Docker & Containerizzazione**:
+    - [x] `Dockerfile` multi-stage con Python, pandoc e texlive.
+    - [x] `docker-compose.yml` con servizi per spider, indice e PDF.
+    - [x] Volume per persistenza output (`docs_c64/`, `dataset_c64/`) e cache HTTP.
+    - [x] Documentazione Docker nel README.
 - [ ] **Miglioramento Estrazione Codice**:
     - [ ] Affinare il rilevamento automatico della sintassi (ACME, DASM, KickAssembler).
     - [ ] Migliorare l'estrazione dei blocchi di codice per gli altri spider.

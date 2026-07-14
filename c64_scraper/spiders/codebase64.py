@@ -1,17 +1,44 @@
 import scrapy
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import time
 from c64_scraper.items import DocItem
 from c64_scraper.utils.processor import ContentProcessor
+
+
+def _normalize_dokuwiki_links(links):
+    seen_ids = set()
+    normalized = []
+    for link in links:
+        parsed = urlparse(link.url)
+        qs = parse_qs(parsed.query)
+        page_id = qs.get("id", [None])[0]
+        if page_id is None:
+            continue
+        if page_id in seen_ids:
+            continue
+        seen_ids.add(page_id)
+        link.url = urlunparse(parsed._replace(query=urlencode({"id": page_id})))
+        normalized.append(link)
+    return normalized
+
 
 class Codebase64Spider(CrawlSpider):
     name = "codebase64"
     allowed_domains = ["codebase.c64.org"]
     start_urls = ["https://codebase.c64.org/doku.php?id=start"]
+    custom_settings = {
+        "CLOSESPIDER_PAGECOUNT": 500,
+    }
 
     rules = (
-        Rule(LinkExtractor(allow=(r"id=mag:", r"id=base:", r"id=programming:")), callback="parse_item", follow=True),
+        Rule(
+            LinkExtractor(allow=(r"id=mag:", r"id=base:", r"id=programming:")),
+            callback="parse_item",
+            follow=True,
+            process_links=_normalize_dokuwiki_links,
+        ),
     )
 
     def parse_item(self, response):

@@ -1,0 +1,80 @@
+name: Scrape and Sync to KB-Agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      spiders:
+        description: "Spiders da eseguire (separati da virgola, o 'all')"
+        required: false
+        default: "all"
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout C64-Scrapy
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        run: |
+          SPIDERS="${{ github.event.inputs.spiders || 'all' }}"
+          if [ "$SPIDERS" = "all" ]; then
+            python main.py --all --index
+          else
+            IFS=',' read -ra SPIDER_LIST <<< "$SPIDERS"
+            for spider in "${SPIDER_LIST[@]}"; do
+              spider=$(echo "$spider" | xargs)
+              python main.py "$spider"
+            done
+            python main.py --index
+          fi
+
+      - name: Checkout C64-KB-Agent
+        uses: actions/checkout@v4
+        with:
+          repository: alby69/C64-KB-Agent
+          token: ${{ secrets.KB_AGENT_TOKEN }}
+          path: kb-agent
+
+      - name: Sync data to KB-Agent
+        run: |
+          mkdir -p kb-agent/data/docs kb-agent/data/dataset
+
+          if [ -d "docs_c64" ]; then
+            rsync -av --delete docs_c64/ kb-agent/data/docs/
+          fi
+
+          if [ -d "dataset_c64" ]; then
+            rsync -av --delete dataset_c64/ kb-agent/data/dataset/
+          fi
+
+      - name: Commit and push to KB-Agent
+        run: |
+          cd kb-agent
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            DATE=$(date -u +%Y-%m-%d)
+            git commit -m "chore: update scraped data ($DATE)"
+            git push
+          fi

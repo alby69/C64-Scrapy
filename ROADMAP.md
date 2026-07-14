@@ -40,3 +40,19 @@ Tutti i compiti di **strutturazione avanzata, memorizzazione vettoriale, chunkin
 
 - [ ] **Feedback Loop**: Permettere agli agenti di `C64-LLM` di richiedere a `C64-KB-Agent` lo scraping on-demand di un URL specifico, che a sua volta invoca questo Scraper.
 - [ ] **Validazione Automatica**: Passare ogni snippet di codice estratto al modulo di validazione sintattica dell'SDK per verificarne la correttezza formale.
+
+## Integrazione Profonda SDK
+
+- [ ] **Feedback Loop**: Permettere agli agenti di `C64-LLM` di richiedere a `C64-KB-Agent` lo scraping on-demand di un URL specifico, che a sua volta invoca questo Scraper.
+- [ ] **Validazione Automatica**: Passare ogni snippet di codice estratto al modulo di validazione sintattica dell'SDK per verificarne la correttezza formale.
+
+## CI/CD Pipeline
+
+- [x] **GitHub Action "Scrape and Sync"**:
+    - [x] Trigger manuale (`workflow_dispatch`) con selezione spider
+    - [x] Cron settimanale (lunedì 06:00 UTC)
+    - [x] Setup Python + pandoc + dipendenze
+    - [x] Esecuzione spider + generazione indici
+    - [x] Push automatico a `C64-KB-Agent/data/`
+- [ ] **Secret Management**:
+    - [ ] Configurare `KB_AGENT_TOKEN` (PAT con scope `repo`)

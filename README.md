@@ -118,3 +118,22 @@ scraped_at: "YYYY-MM-DD"
 ## Integrazione SDK
 
 All'interno dell'SDK, questo modulo viene montato come volume Docker e i suoi output (`docs_c64/` o `dataset_c64/`) sono condivisi con il modulo centralizzato `C64-KB-Agent` per l'aggiornamento dinamico e la strutturazione avanzata della Knowledge Base.
+
+## Pipeline Automatica (CI/CD)
+
+Una GitHub Action esegue lo scraping automaticamente e pusha i dati nel repo [C64-KB-Agent](https://github.com/alby69/C64-KB-Agent).
+
+### Trigger
+- **Manuale**: dalla tab "Actions" → "Scrape and Sync" → "Run workflow"
+- **Cron settimanale**: ogni lunedì alle 06:00 UTC
+
+### Configurazione
+1. Creare un Personal Access Token (PAT) con scope `repo` su GitHub
+2. Aggiungerlo come secret `KB_AGENT_TOKEN` nelle Settings → Secrets → Actions del repo C64-Scrapy
+
+### Struttura dati in C64-KB-Agent
+```
+data/
+├── docs/              # File .md con frontmatter YAML (docs_c64/)
+└── dataset/           # JSONL + indici (dataset_c64/)
+```

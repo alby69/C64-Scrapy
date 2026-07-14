@@ -2,25 +2,36 @@
 
 Questo documento delinea l'evoluzione del modulo Scraper all'interno dell'ecosistema C64 Intelligence SDK.
 
+## Filosofia Decoupled
+
+In accordo con l'architettura generale dell'SDK, il modulo **C64-Scrapy** si limita a compiti di:
+- **Scraping ed estrazione di dati puliti** dal web (siti di riferimento, libri, tutorial, forum).
+- **Conversione dei contenuti in Markdown standard** con frontmatter YAML.
+- **Rilevamento e isolamento dei blocchi di codice** (Assembly 6502 e BASIC).
+- **Generazione di record JSONL deterministici** dotati di ID SHA256 univoco basato sull'URL della risorsa.
+
+Tutti i compiti di **strutturazione avanzata, memorizzazione vettoriale, chunking, deduplicazione e controllo di consistenza** sono delegati all'agente centralizzato **[C64-KB-Agent](https://github.com/alby69/C64-KB-Agent)**.
+
+---
+
 ## Obiettivi a Breve Termine
 
-- [ ] **Nuovi Spider**:
-    - [ ] `c64wiki`: Estrazione sistematica da [C64-Wiki](https://www.c64-wiki.com/).
-    - [ ] `lemon64`: Crawling dei forum tecnici e documentazione.
-    - [ ] `archive_org`: Download automatizzato di manuali PDF e conversione in testo.
+- [x] **Nuovi Spider**:
+    - [x] `c64wiki`: Estrazione sistematica da [C64-Wiki](https://www.c64-wiki.com/).
+    - [x] `codebase64`: Corretto dominio e start url su `https://codebase.c64.org/`.
+    - [x] `archiveorg`: Estrazione di metadati e testi da Archive.org.
+    - [x] `github`: Ricerca automatica di repository con assembly C64.
 - [ ] **Miglioramento Estrazione Codice**:
-    - [ ] Integrazione con `c64extractor` (shared package SDK) per il disassemblaggio automatico dei blocchi di dati trovati nelle pagine.
-    - [ ] Rilevamento automatico della sintassi (ACME, DASM, KickAssembler).
+    - [ ] Affinare il rilevamento automatico della sintassi (ACME, DASM, KickAssembler).
+    - [ ] Migliorare l'estrazione dei blocchi di codice per gli altri spider.
 
 ## Obiettivi a Medio Termine
 
-- [ ] **AI-Powered Scraping**:
-    - [ ] Pipeline di post-processing che utilizza un LLM locale per riassumere i documenti lunghi durante lo scraping.
-    - [ ] Generazione automatica di coppie Q&A (Domanda/Risposta) per il fine-tuning direttamente in fase di crawling.
-- [ ] **Dashboard di Monitoraggio**:
-    - [ ] Semplice interfaccia web per monitorare lo stato dei crawl e la qualità della Knowledge Base prodotta.
+- [ ] **Integrazione Flusso Continuo con C64-KB-Agent**:
+    - [ ] Creazione di script/webhook di push per notificare `C64-KB-Agent` non appena nuovi documenti vengono scaricati o aggiornati.
+    - [ ] Implementazione di un controllo differenziale (incrementale) basato sul campo `last_modified` per non riscaricare pagine non modificate.
 
 ## Integrazione Profonda SDK
 
-- [ ] **Feedback Loop**: Permettere agli agenti di `C64-LLM` di richiedere lo scraping di un URL specifico se non trovano informazioni nella KB locale.
-- [ ] **Validazione Automatica**: Passare ogni snippet di codice estratto al modulo `c64validator` per verificarne la correttezza prima di inserirlo nella KB.
+- [ ] **Feedback Loop**: Permettere agli agenti di `C64-LLM` di richiedere a `C64-KB-Agent` lo scraping on-demand di un URL specifico, che a sua volta invoca questo Scraper.
+- [ ] **Validazione Automatica**: Passare ogni snippet di codice estratto al modulo di validazione sintattica dell'SDK per verificarne la correttezza formale.

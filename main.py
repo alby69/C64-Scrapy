@@ -5,6 +5,9 @@ import sys
 from pathlib import Path
 from build_index import build_index
 from build_pdf import build_pdf
+from build_knowledge_graph import build_knowledge_graph
+from build_api_index import build_api_index
+from build_search_index import build_search_index
 
 def run_scrapy(spider, output_dir, extra_args=None):
     print(f"--- Avvio scraping: {spider} ---")
@@ -25,7 +28,7 @@ def main():
 
     spiders = [args.spider] if args.spider else []
     if args.all:
-        spiders = ["bbcelite", "codebase64", "c64wiki", "archiveorg", "github"]
+        spiders = ["bbcelite", "codebase64", "c64wiki", "archiveorg", "github", "stac64", "dustlayer"]
 
     if not spiders and not (args.index or args.pdf):
         parser.print_help()
@@ -40,6 +43,12 @@ def main():
     if args.index or args.all:
         print("--- Generazione Indice ---")
         build_index(Path(args.output))
+        print("--- Generazione Knowledge Graph ---")
+        build_knowledge_graph(Path(args.output), Path("dataset_c64/knowledge_graph.json"))
+        print("--- Generazione API Index ---")
+        build_api_index(Path(args.output), Path("dataset_c64/api_index.json"))
+        print("--- Generazione SQLite Search Index ---")
+        build_search_index(Path(args.output), Path("dataset_c64/search_index.db"))
 
     if args.pdf:
         print("--- Generazione PDF ---")

@@ -5,3 +5,8 @@ pypandoc>=1.13
 mkdocs>=1.5.0
 mkdocs-material>=9.4.0
 pymdown-extensions>=10.2
+# PDF Processing
+PyMuPDF>=1.23.0
+internetarchive>=3.0.0
+# Testing
+pytest>=7.0.0

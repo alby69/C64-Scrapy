@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout C64-Scrapy
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -54,7 +54,7 @@ jobs:
           fi
 
       - name: Checkout C64-KB-Agent
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: alby69/C64-KB-Agent
           token: ${{ secrets.KB_AGENT_TOKEN }}

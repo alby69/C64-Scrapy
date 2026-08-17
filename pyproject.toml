@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "c64-scrapy"
+version = "0.1.0"
+description = "C64-Scrapy — Scraping della documentazione C64 e generazione dataset conforme al contratto dati"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-3.0-or-later" }
+dependencies = [
+    "scrapy>=2.11",
+    "trafilatura>=1.8",
+    "pyyaml>=6.0",
+    "pypandoc>=1.13",
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.4.0",
+    "pymdown-extensions>=10.2",
+    "PyMuPDF>=1.23.0",
+    "internetarchive>=3.0.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0.0", "jsonschema>=4.0.0"]
+
+[project.scripts]
+c64-scrapy = "main:main"
+
+[tool.setuptools]
+packages = ["c64_scraper"]

@@ -1,0 +1,17 @@
+name: scraper
+display_name: "C64-Scrapy — Scraping documentazione"
+version: "0.1.0"
+sdk_api_version: "1"
+description: "Scraping della documentazione C64 (codebase64, c64-wiki, bbcelite, archive.org, github) e generazione del dataset JSONL/Markdown conforme al contratto dati."
+entry_points:
+  crawl: "main.py:main"
+  knowledge-graph: "build_knowledge_graph.py:main"
+  api-index: "build_api_index.py:main"
+  index: "build_index.py:main"
+capabilities:
+  - scrape
+  - dataset
+  - knowledge-graph
+  - contract-data
+requires_python: ">=3.10"
+standalone: true

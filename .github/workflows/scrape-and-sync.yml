@@ -7,6 +7,10 @@ on:
         description: "Spiders da eseguire (separati da virgola, o 'all')"
         required: false
         default: "all"
+      mode:
+        description: "Modalità scraping ('incremental' o 'full')"
+        required: false
+        default: "incremental"
   schedule:
     - cron: "0 6 * * 1"
 
@@ -42,13 +46,19 @@ jobs:
       - name: Run scraper
         run: |
           SPIDERS="${{ github.event.inputs.spiders || 'all' }}"
+          MODE="${{ github.event.inputs.mode || 'incremental' }}"
+          EXTRA_ARGS=""
+          if [ "$MODE" = "incremental" ]; then
+            EXTRA_ARGS="-a incremental=true"
+          fi
+
           if [ "$SPIDERS" = "all" ]; then
-            python main.py --all --index
+            python main.py --all --index $EXTRA_ARGS
           else
             IFS=',' read -ra SPIDER_LIST <<< "$SPIDERS"
             for spider in "${SPIDER_LIST[@]}"; do
               spider=$(echo "$spider" | xargs)
-              python main.py "$spider"
+              python main.py "$spider" $EXTRA_ARGS
             done
             python main.py --index
           fi

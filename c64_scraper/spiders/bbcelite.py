@@ -101,7 +101,8 @@ class BBCEliteSpider(CrawlSpider):
                 continue
 
             lang = ContentProcessor.detect_language(code_text) or "asm"
-            blocks.append({"lang": lang, "code": code_text})
+            dialect = ContentProcessor.detect_assembly_dialect(code_text) if lang == "asm" else ""
+            blocks.append({"lang": lang, "dialect": dialect, "code": code_text})
         return blocks
 
     def _improve_code_blocks(self, content: str, response) -> str:

@@ -27,22 +27,10 @@ class ContentProcessor:
         return title.strip()
 
     @staticmethod
-    def detect_language(code_text: str) -> str:
-        """Heuristically detects if code is BASIC or Assembly."""
-        code_lower = code_text.lower()
-        basic_keywords = ["print", "goto", "if", "then", "poke", "peek", "next", "for", "data", "rem"]
-        if any(re.search(rf"\b{k}\b", code_lower) for k in basic_keywords):
-            return "basic"
-
-        # Assembly 6502 mnemonics
-        asm_keywords = [
-            "lda", "sta", "ldx", "stx", "ldy", "sty", "jsr", "rts", "jmp",
-            "beq", "bne", "cmp", "cpx", "cpy", "inc", "dec", "adc", "sbc"
-        ]
-        if any(re.search(rf"\b{k}\b", code_lower) for k in asm_keywords):
-            return "asm"
-
-        return ""
+    def detect_language(code_text: str, hint: str = "") -> str:
+        """Delegates language detection to CodeLanguageDetector."""
+        from c64_scraper.utils.code_lang_detector import CodeLanguageDetector
+        return CodeLanguageDetector.detect_language(code_text, hint=hint)
 
     @staticmethod
     def classify_document(html_text: str, body_md: str, url: str, title: str, spider_name: str = "") -> dict:
@@ -140,17 +128,9 @@ class ContentProcessor:
 
     @staticmethod
     def detect_assembly_dialect(code_text: str) -> str:
-        """Heuristically detects the Assembly dialect/compiler used."""
-        code_lower = code_text.lower()
-        if any(kw in code_lower for kw in [".pc", ".var", ".filenamespace", ".label", ".const", "import"]):
-            return "Kick Assembler"
-        if any(kw in code_lower for kw in ["!to", "!zone", "!byte", "!src", "!fill"]):
-            return "ACME"
-        if any(kw in code_lower for kw in ["processor 6502", "org", "dc.b"]):
-            return "DASM"
-        if any(kw in code_lower for kw in ["* =", "*="]):
-            return "Turbo Assembler / Generic"
-        return "Generic Assembly"
+        """Delegates dialect detection to CodeLanguageDetector."""
+        from c64_scraper.utils.code_lang_detector import CodeLanguageDetector
+        return CodeLanguageDetector.detect_assembly_dialect(code_text)
 
     @staticmethod
     def extract_routines_from_code(code_text: str, source_url: str = "") -> list:

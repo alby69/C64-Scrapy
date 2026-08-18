@@ -8,6 +8,18 @@ import yaml
 from itemadapter import ItemAdapter
 
 from c64_scraper.utils.processor import ContentProcessor
+from c64_scraper.utils.validator import ItemValidator
+
+
+class ValidationPipeline:
+    """Validates DocItems against schema prior to downstream writing."""
+
+    def process_item(self, item, spider):
+        adapter = ItemAdapter(item)
+        is_valid, err_msg = ItemValidator.validate_item(adapter.asdict())
+        if not is_valid:
+            spider.logger.warning(f"Item validation warning for {adapter.get('url')}: {err_msg}")
+        return item
 
 
 class MarkdownWriterPipeline:

@@ -67,7 +67,8 @@ class Codebase64Spider(CrawlSpider):
             code_text = "".join(pre.css("::text").getall()).strip()
             if code_text:
                 lang = ContentProcessor.detect_language(code_text) or "asm"
-                item["code_blocks"].append({"lang": lang, "code": code_text})
+                dialect = ContentProcessor.detect_assembly_dialect(code_text) if lang == "asm" else ""
+                item["code_blocks"].append({"lang": lang, "dialect": dialect, "code": code_text})
 
         item["scraped_at"] = time.strftime("%Y-%m-%d")
         if last_modified:

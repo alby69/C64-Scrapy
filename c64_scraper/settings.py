@@ -34,6 +34,7 @@ RETRY_ENABLED = True
 RETRY_TIMES = 3
 
 ITEM_PIPELINES = {
+    "c64_scraper.pipelines.ValidationPipeline": 200,
     "c64_scraper.pipelines.MarkdownWriterPipeline": 300,
     "c64_scraper.pipelines.JsonDatasetPipeline": 400,
 }

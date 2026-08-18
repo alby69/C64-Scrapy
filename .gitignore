@@ -6,5 +6,7 @@ docs_c64/
 docs_bbcelite/
 dataset_c64/
 httpcache/
+test_docs/
+*.egg-info/
 *.pdf
 _combined.md

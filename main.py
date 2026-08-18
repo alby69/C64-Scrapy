@@ -16,15 +16,34 @@ def run_scrapy(spider, output_dir, extra_args=None):
         cmd.extend(extra_args)
     subprocess.run(cmd, check=True)
 
+def scrape_url(url: str, spider: str, output_dir: str):
+    print(f"--- Scraping singolo URL: {url} (spider: {spider}) ---")
+    cmd = ["scrapy", "crawl", spider, "-a", f"start_urls={url}", "-s", f"DOCS_OUTPUT_DIR={output_dir}", "-s", "CLOSESPIDER_PAGECOUNT=1"]
+    subprocess.run(cmd, check=True)
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == "scrape-url":
+        url_parser = argparse.ArgumentParser(description="Scrape a single URL on demand")
+        url_parser.add_argument("cmd", choices=["scrape-url"])
+        url_parser.add_argument("url", help="URL da scaricare")
+        url_parser.add_argument("--spider", default="c64wiki", help="Nome dello spider da usare")
+        url_parser.add_argument("--output", default="docs_c64", help="Cartella di output")
+        url_args = url_parser.parse_args()
+        scrape_url(url_args.url, url_args.spider, url_args.output)
+        return
+
     parser = argparse.ArgumentParser(description="C64 Scraper CLI")
     parser.add_argument("spider", nargs="?", help="Nome dello spider da eseguire (es. bbcelite, codebase64, c64wiki, archiveorg, github)")
     parser.add_argument("--output", default="docs_c64", help="Cartella di output")
     parser.add_argument("--index", action="store_true", help="Genera l'indice dopo lo scraping")
     parser.add_argument("--pdf", action="store_true", help="Genera il PDF dopo lo scraping")
     parser.add_argument("--all", action="store_true", help="Esegue tutti gli spider definiti")
+    parser.add_argument("--incremental", action="store_true", help="Abilita scraping incrementale")
 
     args, unknown = parser.parse_known_args()
+
+    if args.incremental:
+        unknown.extend(["-a", "incremental=true"])
 
     spiders = [args.spider] if args.spider else []
     if args.all:

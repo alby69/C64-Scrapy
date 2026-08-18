@@ -1,5 +1,6 @@
 import re
 import trafilatura
+from c64_scraper.utils.code_validator import CodeSyntaxValidator
 
 class ContentProcessor:
     """Utility class to process, clean, and classify scraped content."""
@@ -31,6 +32,17 @@ class ContentProcessor:
         """Delegates language detection to CodeLanguageDetector."""
         from c64_scraper.utils.code_lang_detector import CodeLanguageDetector
         return CodeLanguageDetector.detect_language(code_text, hint=hint)
+
+    @staticmethod
+    def detect_assembly_dialect(code_text: str) -> str:
+        """Delegates dialect detection to CodeLanguageDetector."""
+        from c64_scraper.utils.code_lang_detector import CodeLanguageDetector
+        return CodeLanguageDetector.detect_assembly_dialect(code_text)
+
+    @staticmethod
+    def validate_code_syntax(code_text: str, lang: str = "asm") -> dict:
+        """Validates code syntax using CodeSyntaxValidator."""
+        return CodeSyntaxValidator.validate_code(code_text, lang)
 
     @staticmethod
     def classify_document(html_text: str, body_md: str, url: str, title: str, spider_name: str = "") -> dict:
@@ -125,12 +137,6 @@ class ContentProcessor:
             "hardware": list(set(hardware)),
             "related": related
         }
-
-    @staticmethod
-    def detect_assembly_dialect(code_text: str) -> str:
-        """Delegates dialect detection to CodeLanguageDetector."""
-        from c64_scraper.utils.code_lang_detector import CodeLanguageDetector
-        return CodeLanguageDetector.detect_assembly_dialect(code_text)
 
     @staticmethod
     def extract_routines_from_code(code_text: str, source_url: str = "") -> list:

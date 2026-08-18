@@ -1,27 +1,16 @@
-"""
-Spider Scrapy per elite.bbcelite.com.
-
-Esegue un crawl limitato ad alcune sezioni del sito (about_site, deep_dives,
-c64/indexes, hacks di default), estrae il contenuto principale di ogni pagina
-con trafilatura (esclude nav/menu/footer) e lo converte in Markdown.
-
-Uso:
-    scrapy crawl bbcelite -a sections="about_site,deep_dives,c64/indexes,hacks" \
-        -s DOCS_OUTPUT_DIR=docs_bbcelite
-
-Parametri (-a):
-    sections   Lista separata da virgole dei prefissi di path da includere nel crawl.
-"""
-
 import re
 import time
 from urllib.parse import urlparse
 
+import scrapy
+from scrapy import signals
 from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import CrawlSpider, Rule
 
 from c64_scraper.items import DocItem
 from c64_scraper.utils.processor import ContentProcessor
+from c64_scraper.utils.incremental_manager import IncrementalStateManager
+from c64_scraper.utils.reporter import RunReporter
 
 DEFAULT_SECTIONS = "about_site,deep_dives,c64/indexes,hacks"
 
@@ -31,18 +20,15 @@ KEYWORD_TAG_MAP = {
     "memory_map": "memory", "index": "reference",
 }
 
-
 class BBCEliteSpider(CrawlSpider):
     name = "bbcelite"
     allowed_domains = ["elite.bbcelite.com"]
 
-    def __init__(self, sections=DEFAULT_SECTIONS, *args, **kwargs):
+    def __init__(self, sections=DEFAULT_SECTIONS, incremental: str = "false", *args, **kwargs):
         self.sections = [s.strip().strip("/") for s in sections.split(",") if s.strip()]
         self.start_urls = [f"https://elite.bbcelite.com/{s}/" for s in self.sections]
+        self.incremental = str(incremental).lower() in ("true", "1", "yes")
 
-        # Segue solo i link il cui path inizia con una delle sezioni richieste,
-        # restando così dentro al perimetro del tutorial (niente pagine di
-        # copyright/licenza/altre piattaforme non richieste).
         allow_patterns = [rf"^https://elite\.bbcelite\.com/{re.escape(s)}/" for s in self.sections]
 
         self.rules = (
@@ -52,24 +38,37 @@ class BBCEliteSpider(CrawlSpider):
 
         super().__init__(*args, **kwargs)
         self._compile_rules()
+        self.state_manager = IncrementalStateManager()
+        self.reporter = RunReporter()
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super().from_crawler(crawler, *args, **kwargs)
+        crawler.signals.connect(spider.spider_closed, signal=signals.spider_closed)
+        return spider
+
+    def spider_closed(self, spider):
+        self.state_manager.save_state(self.name)
+        self.reporter.generate_report(self.name)
+        self.logger.info("Saved incremental state and generated run report.")
 
     def parse_item(self, response):
         if "text/html" not in response.headers.get("Content-Type", b"").decode(errors="ignore"):
             return
 
+        last_mod_header = response.headers.get("Last-Modified")
+        last_modified = last_mod_header.decode("utf-8", errors="ignore") if last_mod_header else None
+
+        if self.incremental and last_modified:
+            if self.state_manager.is_page_unmodified(self.name, response.url, last_modified):
+                self.logger.info(f"Skipping unmodified page: {response.url}")
+                self.reporter.record_skipped(response.url)
+                return
+
         html = response.text
         title = ContentProcessor.clean_title(response.css("title::text").get() or response.url, " - Elite")
 
-        # Estrazione base con trafilatura via ContentProcessor
         body_md = ContentProcessor.extract_markdown(html, response.url)
-
-        # Post-processing per migliorare l'estrazione del codice
-        if body_md:
-            body_md = self._improve_code_blocks(body_md, response)
-
-        # Get last modified header if present
-        last_mod_header = response.headers.get("Last-Modified")
-        last_modified = last_mod_header.decode("utf-8", errors="ignore") if last_mod_header else None
 
         item = DocItem()
         item["url"] = response.url
@@ -81,6 +80,10 @@ class BBCEliteSpider(CrawlSpider):
         item["scraped_at"] = time.strftime("%Y-%m-%d")
         if last_modified:
             item["last_modified"] = last_modified
+
+        self.state_manager.update_page_state(self.name, response.url, last_modified, item["scraped_at"])
+        self.reporter.record_scraped(response.url)
+
         yield item
 
     @staticmethod
@@ -91,31 +94,24 @@ class BBCEliteSpider(CrawlSpider):
         return "/".join(parts[:-1]) if len(parts) > 1 else parts[0]
 
     def _extract_explicit_code(self, response) -> list:
-        """Estrae blocchi di codice espliciti dai tag <pre> o <code>."""
         blocks = []
-        # Cerchiamo blocchi che potrebbero essere assembly o basic
         for pre in response.css("pre, code.code, div.code"):
-            code = pre.css("::text").getall()
-            code_text = "".join(code).strip()
+            code_text = "".join(pre.css("::text").getall()).strip()
             if not code_text:
                 continue
 
             lang = ContentProcessor.detect_language(code_text) or "asm"
             dialect = ContentProcessor.detect_assembly_dialect(code_text) if lang == "asm" else ""
-            blocks.append({"lang": lang, "dialect": dialect, "code": code_text})
+            syntax_val = ContentProcessor.validate_code_syntax(code_text, lang)
+
+            blocks.append({
+                "lang": lang,
+                "dialect": dialect,
+                "code": code_text,
+                "syntax_valid": syntax_val["is_valid"],
+                "syntax_ratio": syntax_val["valid_ratio"]
+            })
         return blocks
-
-    def _improve_code_blocks(self, content: str, response) -> str:
-        """
-        Migliora la formattazione dei blocchi di codice Assembly 6502.
-        """
-        asm_keywords = r"\b(LDA|STA|LDX|STX|LDY|STY|JSR|RTS|JMP|BEQ|BNE|CMP|CPX|CPY|INC|DEC|ADC|SBC|PHA|PLA|PHP|PLP|ASL|LSR|ROL|ROR|AND|ORA|EOR|BIT|SEC|CLC|SED|CLD|SEI|CLI|TAX|TXA|TAY|TYA|TSX|TXS)\b"
-
-        # Esempio di post-processing per marcare blocchi di testo come assembly
-        # se contengono istruzioni tipiche e non sono già formattati.
-        # Per ora limitiamo l'intervento per evitare falsi positivi nel testo narrativo.
-
-        return content
 
     @staticmethod
     def _guess_tags(url: str) -> list:

@@ -7,7 +7,7 @@ class CodeLanguageDetector:
     BASIC_KEYWORDS = [
         "print", "goto", "if", "then", "poke", "peek", "next", "for", "data", "rem",
         "gosub", "return", "input", "dim", "read", "restore", "sys", "cont", "list",
-        "run", "clr", "load", "save", "verify", "new"
+        "run", "clr", "load", "save", "verify", "new", "on", "get", "usr", "fre"
     ]
 
     ASM_MNEMONICS = [
@@ -15,7 +15,9 @@ class CodeLanguageDetector:
         "beq", "bne", "cmp", "cpx", "cpy", "inc", "dec", "adc", "sbc",
         "pha", "pla", "php", "plp", "asl", "lsr", "rol", "ror", "and",
         "ora", "eor", "bit", "sec", "clc", "sed", "cld", "sei", "cli",
-        "tax", "txa", "tay", "tya", "tsx", "txs", "nop", "brk", "rti"
+        "tax", "txa", "tay", "tya", "tsx", "txs", "nop", "brk", "rti",
+        # Illegal opcodes
+        "anc", "rla", "sre", "rra", "sax", "lax", "dcp", "isc", "slo", "alr", "arr"
     ]
 
     @classmethod
@@ -46,8 +48,8 @@ class CodeLanguageDetector:
         # Count Assembly mnemonic matches
         asm_score = sum(1 for m in cls.ASM_MNEMONICS if re.search(rf"\b{m}\b", code_lower))
 
-        # Additional ASM indicators like hex literals ($d020, #$00, %00000000)
-        if re.search(r'#?\$[0-9a-f]{2,4}\b', code_lower) or re.search(r'\b(org|\* =|\*=|\!to|\.pc)\b', code_lower):
+        # Additional ASM indicators like hex literals ($d020, #$00, %00000000) or directives
+        if re.search(r'#?\$[0-9a-f]{2,4}\b', code_lower) or re.search(r'\b(org|\* =|\*=|\!to|\.pc|\.segment|\.proc)\b', code_lower):
             asm_score += 2
 
         if basic_score > asm_score and basic_score > 0:
@@ -70,12 +72,18 @@ class CodeLanguageDetector:
         code_lower = code_text.lower()
 
         # Kick Assembler
-        kick_keywords = [".pc", ".var", ".filenamespace", ".label", ".const", ".import", ".pseudopc", ".segment", ".struct", ".macro"]
+        kick_keywords = [
+            ".pc", ".var", ".filenamespace", ".label", ".const", ".import",
+            ".pseudopc", ".segment", ".struct", ".macro", ".encoding", ".file"
+        ]
         if any(kw in code_lower for kw in kick_keywords):
             return "Kick Assembler"
 
         # ACME
-        acme_keywords = ["!to", "!zone", "!byte", "!src", "!fill", "!for", "!pseudopc", "!align", "!convtab", "!8", "!16", "!32", "!ct", "!scr"]
+        acme_keywords = [
+            "!to", "!zone", "!byte", "!word", "!src", "!fill", "!for",
+            "!pseudopc", "!align", "!convtab", "!8", "!16", "!32", "!ct", "!scr"
+        ]
         if any(kw in code_lower for kw in acme_keywords):
             return "ACME"
 
@@ -83,6 +91,11 @@ class CodeLanguageDetector:
         dasm_keywords = ["processor 6502", "dc.b", "dc.w", "ds.b", "seg.u", "seg "]
         if any(kw in code_lower for kw in dasm_keywords):
             return "DASM"
+
+        # CA65 / cc65
+        ca65_keywords = [".org", ".segment", ".proc", ".endproc", ".export", ".res ", ".reloc"]
+        if any(kw in code_lower for kw in ca65_keywords):
+            return "CA65"
 
         # Turbo Assembler / Generic directives
         if any(kw in code_lower for kw in ["* =", "*=", ".byte", ".word", ".text", ".db", ".dw", ".equ"]):

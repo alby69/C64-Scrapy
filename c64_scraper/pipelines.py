@@ -38,10 +38,11 @@ class MarkdownWriterPipeline:
         file_path = self.out_dir / domain / self._slugify_path(url)
         file_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Esegui classificazione semantica avanzata
         classification = ContentProcessor.classify_document(
             "", adapter.get("body_md", ""), url, adapter["title"], spider.name
         )
+
+        code_blocks = adapter.get("code_blocks", [])
 
         frontmatter = {
             "title": adapter["title"],
@@ -53,6 +54,7 @@ class MarkdownWriterPipeline:
             "hardware": classification["hardware"],
             "related": classification["related"],
             "scraped_at": adapter["scraped_at"],
+            "has_code_blocks": len(code_blocks) > 0,
         }
         if "last_modified" in adapter and adapter["last_modified"]:
             frontmatter["last_modified"] = adapter["last_modified"]
@@ -61,18 +63,19 @@ class MarkdownWriterPipeline:
         content += f"# {adapter['title']}\n\n"
         content += adapter["body_md"] or "*(contenuto non estratto automaticamente — controllare l'URL sorgente)*\n"
 
-        code_blocks = adapter.get("code_blocks", [])
         if code_blocks:
             content += "\n\n## Codice Estratto\n\n"
             for block in code_blocks:
                 code_text = block.get("code", "")
                 lang = block.get("lang", "")
+                dialect = block.get("dialect") or ContentProcessor.detect_assembly_dialect(code_text)
+                syntax_valid = block.get("syntax_valid")
+                syntax_ratio = block.get("syntax_ratio")
 
-                # Rileva dialetto e routine
                 if lang in ["asm", "assembly"]:
-                    dialect = ContentProcessor.detect_assembly_dialect(code_text)
                     routines = ContentProcessor.extract_routines_from_code(code_text, url)
-                    content += f"### Snippet Codice (Dialetto: {dialect})\n\n"
+                    validation_str = f" | Sintassi Valida: {syntax_valid} ({int(syntax_ratio*100) if syntax_ratio else 100}%)" if syntax_valid is not None else ""
+                    content += f"### Snippet Codice (Dialetto: {dialect}{validation_str})\n\n"
 
                     if routines:
                         content += "#### Routine Identificate:\n"
@@ -82,7 +85,8 @@ class MarkdownWriterPipeline:
 
                     content += f"```assembly\n{code_text}\n```\n\n"
                 else:
-                    content += f"### Snippet Codice (BASIC)\n\n"
+                    validation_str = f" (Sintassi Valida: {syntax_valid})" if syntax_valid is not None else ""
+                    content += f"### Snippet Codice (BASIC{validation_str})\n\n"
                     content += f"```basic\n{code_text}\n```\n\n"
 
         content += f"\n\n---\n*Fonte originale: [{url}]({url})*\n"
@@ -129,12 +133,13 @@ class JsonDatasetPipeline:
         adapter = ItemAdapter(item)
         url = adapter["url"]
 
-        # Genera un ID deterministico basato su SHA256 per l'item
         unique_id = f"{spider.name}_{hashlib.sha256(url.encode('utf-8')).hexdigest()[:16]}"
 
         classification = ContentProcessor.classify_document(
             "", adapter.get("body_md", ""), url, adapter["title"], spider.name
         )
+
+        code_blocks = adapter.get("code_blocks", [])
 
         record = {
             "id": unique_id,
@@ -148,7 +153,9 @@ class JsonDatasetPipeline:
                 "hardware": classification["hardware"],
                 "related": classification["related"],
                 "scraped_at": adapter["scraped_at"],
-                "spider": spider.name
+                "spider": spider.name,
+                "code_blocks_count": len(code_blocks),
+                "code_blocks": code_blocks
             }
         }
         if "last_modified" in adapter and adapter["last_modified"]:

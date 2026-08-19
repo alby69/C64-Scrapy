@@ -43,13 +43,16 @@ jobs:
           key: scrapy-httpcache-${{ github.run_id }}
           restore-keys: scrapy-httpcache-
 
-      - name: Run scraper
+      - name: Run scraper and generate KB manifest
+        env:
+          KB_WEBHOOK_URL: ${{ secrets.KB_WEBHOOK_URL }}
+          KB_AGENT_TOKEN: ${{ secrets.KB_AGENT_TOKEN }}
         run: |
           SPIDERS="${{ github.event.inputs.spiders || 'all' }}"
           MODE="${{ github.event.inputs.mode || 'incremental' }}"
-          EXTRA_ARGS=""
+          EXTRA_ARGS="--notify-kb"
           if [ "$MODE" = "incremental" ]; then
-            EXTRA_ARGS="-a incremental=true"
+            EXTRA_ARGS="$EXTRA_ARGS -a incremental=true"
           fi
 
           if [ "$SPIDERS" = "all" ]; then
@@ -60,7 +63,7 @@ jobs:
               spider=$(echo "$spider" | xargs)
               python main.py "$spider" $EXTRA_ARGS
             done
-            python main.py --index
+            python main.py --index --notify-kb
           fi
 
       - name: Checkout C64-KB-Agent
